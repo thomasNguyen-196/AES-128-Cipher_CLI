@@ -1,48 +1,5 @@
 """Helper utilities for AES (16-byte blocks, hex/text handling)."""
 
-from typing import Iterable, List
-
-
-def left_rotate(bits: List[int], shift: int) -> List[int]:
-    """Circular left rotation for a list of bits."""
-    if not bits:
-        return bits
-    shift %= len(bits)
-    return bits[shift:] + bits[:shift]
-
-
-def permute(bits: List[int], table: Iterable[int]) -> List[int]:
-    """Reorder/select bits according to a permutation table (1-based indices)."""
-    return [bits[i - 1] for i in table]
-
-
-def xor_bits(a: List[int], b: List[int]) -> List[int]:
-    """Bitwise XOR between two equal-length bit lists."""
-    return [(x ^ y) for x, y in zip(a, b)]
-
-
-def bytes_to_bits(data: bytes) -> List[int]:
-    """Convert bytes to a list of bits (big-endian within each byte)."""
-    out = []
-    for byte in data:
-        for i in range(7, -1, -1): # Iterate i in range 7 to 0
-            out.append((byte >> i) & 1) # right shift i steps and mask - to get bit at MSB --> LSB (left --> right)
-    return out
-
-
-def bits_to_bytes(bits: List[int]) -> bytes:
-    """Convert a list of bits (len multiple of 8) back to bytes."""
-    if len(bits) % 8 != 0:
-        raise ValueError("Number of bits must be a multiple of 8.")
-    out = bytearray()
-    for i in range(0, len(bits), 8):
-        byte = 0
-        for b in bits[i:i + 8]:
-            byte = (byte << 1) | (b & 1) # left shift and add current bit
-        out.append(byte)
-    return bytes(out)
-
-
 def utf8_to_bytes(text: str) -> bytes:
     """Encode text to UTF-8 bytes (strict)."""
     return text.encode("utf-8")

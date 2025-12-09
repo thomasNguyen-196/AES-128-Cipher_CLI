@@ -7,10 +7,9 @@ Công cụ dòng lệnh (CLI) cho việc mã hóa và giải mã văn bản bằ
 ## Tính năng
 
 - Mã hóa/giải mã văn bản sử dụng AES-128 (block 128 bit, key 128 bit).
-- Hỗ trợ sẵn khung mode ECB và CFB (logic AES chưa được viết; bạn sẽ bổ sung ở `aes_cipher/cipher.py`).
+- Hỗ trợ mode ECB (PKCS#7 padding) và CFB (không padding, xử lý chuỗi dài bất kỳ).
 - CFB dùng IV 16 byte (32 hex hoặc 16 ký tự); nếu không nhập IV khi encrypt, chương trình tự sinh. Ciphertext CFB trả về IV và ciphertext tách biệt (hex).
 - Nhập văn bản trực tiếp, từ stdin (pipe) hoặc từ file.
-- Giao diện dòng lệnh thân thiện, có tùy chọn copy ra clipboard / lưu file.
 - Giao diện dòng lệnh thân thiện, có tùy chọn copy ra clipboard / lưu file.
 
 ## Yêu cầu
@@ -32,5 +31,5 @@ Công cụ dòng lệnh (CLI) cho việc mã hóa và giải mã văn bản bằ
 
 ## Ghi chú
 
-- Chưa triển khai AES-128 core; cần hoàn thiện `aes_cipher/cipher.py`. Workflows/UI đã sẵn khung mode ECB/CFB.
+- Đã triển khai AES-128 core với ECB/CFB; ciphertext/IV hiển thị dạng hex tách biệt. CFB decrypt yêu cầu IV nhập thủ công (hoặc dùng IV đã trả ở kết quả encrypt).
 - Plaintext/key/IV có thể nhập dưới dạng text (UTF-8) hoặc hex (key/IV: 32 hex = 16 byte).

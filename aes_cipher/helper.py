@@ -1,4 +1,4 @@
-"""Helper utilities for bit-level operations (legacy from DES scaffold)."""
+"""Helper utilities for AES (16-byte blocks, hex/text handling)."""
 
 from typing import Iterable, List
 
@@ -48,7 +48,7 @@ def utf8_to_bytes(text: str) -> bytes:
     return text.encode("utf-8")
 
 
-def pkcs7_pad(data: bytes, block_size: int = 8) -> bytes:
+def pkcs7_pad(data: bytes, block_size: int = 16) -> bytes:
     """
     Apply PKCS#7 padding to reach a multiple of block_size.
     Note: block_size must fit in one byte (1..255) because padding value is stored in a single byte.
@@ -59,39 +59,7 @@ def pkcs7_pad(data: bytes, block_size: int = 8) -> bytes:
     return data + bytes([pad_len] * pad_len)
 
 
-def _force_odd_parity(byte: int) -> int:
-    """Set LSB parity bit to make total set bits odd."""
-    ones = bin(byte >> 1).count("1")  # ignore current "parity bit"
-    lsb = byte & 1
-    if (ones + lsb) % 2 == 0:  # if parity even, flip lsb to make odd
-        return byte ^ 1
-    return byte
-
-
-def normalize_des_key(key_str: str) -> bytes:
-    """
-    Normalize user key string into 8-byte DES key with odd parity.
-    - Accepts 16 hex chars (case-insensitive), else raw UTF-8 bytes.
-    - Enforces length 8 bytes; raises ValueError otherwise.
-    - Adjusts each byte to odd parity (LSB parity bit).
-    """
-    key_bytes: bytes
-    stripped = key_str.strip()
-    if len(stripped) == 16:
-        try:
-            key_bytes = bytes.fromhex(stripped)
-        except ValueError:
-            key_bytes = utf8_to_bytes(key_str)
-    else:
-        key_bytes = utf8_to_bytes(key_str)
-
-    if len(key_bytes) != 8:
-        raise ValueError("DES key must be exactly 8 bytes (64 bits).")
-
-    return bytes(_force_odd_parity(b) for b in key_bytes)
-
-
-def pkcs7_unpad(data: bytes, block_size: int = 8) -> bytes:
+def pkcs7_unpad(data: bytes, block_size: int = 16) -> bytes:
     """Remove PKCS#7 padding; raises ValueError on bad padding."""
     if not data or len(data) % block_size != 0:
         raise ValueError("Invalid padded data length.")
@@ -103,9 +71,58 @@ def pkcs7_unpad(data: bytes, block_size: int = 8) -> bytes:
     return data[:-pad_len]
 
 
-def chunk_blocks(data: bytes, block_size: int = 8):
+def chunk_blocks(data: bytes, block_size: int = 16):
     """Yield successive blocks of size block_size from data; length must be multiple of block_size."""
     if len(data) % block_size != 0:
         raise ValueError("Data length must be a multiple of block size.")
     for i in range(0, len(data), block_size):
         yield data[i:i + block_size]
+
+
+def normalize_aes_key(key_str: str) -> bytes:
+    """
+    Normalize user key string into 16-byte AES key.
+    Accepts 32 hex chars (case-insensitive) or 16 UTF-8 chars.
+    Raises ValueError otherwise.
+    """
+    stripped = key_str.strip()
+    if len(stripped) == 32:
+        try:
+            key_bytes = bytes.fromhex(stripped)
+        except ValueError:
+            key_bytes = utf8_to_bytes(key_str)
+    else:
+        key_bytes = utf8_to_bytes(key_str)
+
+    if len(key_bytes) != 16:
+        raise ValueError("AES-128 key must be exactly 16 bytes (32 hex or 16 chars).")
+    return key_bytes
+
+
+def normalize_iv(iv_str: str, size: int = 16) -> bytes:
+    """
+    Normalize IV string into 'size' bytes (default 16 for AES).
+    Accepts hex string of length 2*size or UTF-8 text of length size.
+    """
+    stripped = iv_str.strip()
+    if len(stripped) == 2 * size:
+        try:
+            iv_bytes = bytes.fromhex(stripped)
+        except ValueError:
+            iv_bytes = utf8_to_bytes(iv_str)
+    else:
+        iv_bytes = utf8_to_bytes(iv_str)
+
+    if len(iv_bytes) != size:
+        raise ValueError(f"IV must be exactly {size} bytes.")
+    return iv_bytes
+
+
+def hex_encode(data: bytes) -> str:
+    """Hex-encode bytes to string."""
+    return data.hex()
+
+
+def hex_decode(text: str) -> bytes:
+    """Decode hex string to bytes; raises ValueError on invalid hex."""
+    return bytes.fromhex(text.strip())

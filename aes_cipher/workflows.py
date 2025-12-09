@@ -85,12 +85,7 @@ def encrypt_flow():
     key = _read_key()
     mode = _read_mode()
     iv = _read_iv(optional=True) if mode == "cfb" else None
-    try:
-        cipher_hex, iv_hex = cipher.encrypt(plaintext, key, mode=mode, iv=iv)
-    except NotImplementedError as e:
-        ui.boxed("CHƯA TRIỂN KHAI", str(e))
-        ui.prompt("Nhấn Enter để về menu...")
-        return
+    cipher_hex, iv_hex = cipher.encrypt(plaintext, key, mode=mode, iv=iv)
 
     title = f"Ciphertext ({mode.upper()})"
     if iv_hex:
@@ -108,12 +103,7 @@ def decrypt_flow():
     key = _read_key()
     mode = _read_mode()
     iv = _read_iv(optional=False) if mode == "cfb" else None
-    try:
-        plaintext = cipher.decrypt(ciphertext, key, mode=mode, iv=iv)
-    except NotImplementedError as e:
-        ui.boxed("CHƯA TRIỂN KHAI", str(e))
-        ui.prompt("Nhấn Enter để về menu...")
-        return
+    plaintext = cipher.decrypt(ciphertext, key, mode=mode, iv=iv)
     ui.boxed("KẾT QUẢ", plaintext)
     post_output_actions(plaintext, key=key, iv=iv, label=f"Plaintext ({mode.upper()})")
 
@@ -169,7 +159,7 @@ def show_help():
     ui.banner()
     help_text = (
         "Hướng dẫn ngắn:\n"
-        "- Khung mã hóa/giải mã AES-128 với mode ecb hoặc cfb (logic AES cần bổ sung ở cipher.py).\n"
+        "- Mã hóa/giải mã AES-128 với mode ecb hoặc cfb.\n"
         "- ECB dùng PKCS#7 padding và trả ciphertext hex.\n"
         "- CFB cần IV 16 byte (32 hex hoặc 16 ký tự); encrypt trả về IV và ciphertext tách biệt (hex), decrypt yêu cầu IV nhập thủ công. CFB không cần padding và hỗ trợ chuỗi dài bất kỳ.\n"
         "- Văn bản dài có thể đọc từ file (chọn 'f') hoặc pipe: cat file.txt | aes\n"
